@@ -761,12 +761,11 @@
 
     let supabase;
     try {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } catch(e) {
-      console.error('Error al inicializar Supabase:', e);
-      supabase = null;
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }  catch(e) {
+    console.error('Error al inicializar Supabase:', e);
+    supabase = null;
     }
-
     let currentUser = null;
     let isAdmin = false;
     let products = [];
