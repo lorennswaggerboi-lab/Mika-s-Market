@@ -759,13 +759,13 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqZHp3eXRpbGh6d21ncnJva21rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzOTA3MDksImV4cCI6MjEwNjk2NjcwOX0.wrWw7PAJdBf-xyf2KDjda-5pf931HfgFr1kkEkpNKE4';
     const ADMIN_EMAIL = 'micaelavanesarosica@gmail.com';
 
-    let supabase;
     try {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }  catch(e) {
-    console.error('Error al inicializar Supabase:', e);
-    supabase = null;
+      window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch(e) {
+      console.error('Error al inicializar Supabase:', e);
+      window.supabaseClient = null;
     }
+    var supabase = window.supabaseClient;
     let currentUser = null;
     let isAdmin = false;
     let products = [];
