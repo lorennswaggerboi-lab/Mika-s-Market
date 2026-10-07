@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0" name="viewport"/>
+  <title>Mika's Market — Tienda</title>
+
+  <!-- Favicon Logo Bolso Rojo -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none'%3E%3Crect width='48' height='48' rx='14' fill='%23EF4444' fill-opacity='0.15'/%3E%3Cpath d='M16 18V13A8 8 0 0 1 32 13V18' stroke='%23EF4444' stroke-width='3.5' stroke-linecap='round'/%3E%3Cpath d='M10 18H38L35.5 38H12.5L10 18Z' fill='%23EF4444' stroke='%23DC2626' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M18 24V30' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3Cpath d='M24 24V30' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3Cpath d='M30 24V30' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E"/>
+
+  <!-- Google Fonts & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ========== CSS RESET & BASE ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --color-primary: #dc2626;          /* Rojo principal */
+      --color-primary-dark: #b91c1c;     /* Rojo oscuro */
+      --color-primary-light: #fef2f2;    /* Rojo claro de fondo */
+      --color-accent: #16a34a;
+      --color-whatsapp: #25D366;
+      --color-whatsapp-dark: #1da851;
+      --color-bg: #f8fafc;
+      --color-surface: #ffffff;
+      --color-surface-alt: #f1f5f9;
+      --color-text: #0f172a;
+      --color-text-secondary: #475569;
+      --color-text-muted: #94a3b8;
+      --color-border: #e2e8f0;
+      --color-border-light: #f1f5f9;
+      --color-danger: #ef4444;
+      --color-danger-dark: #dc2626;
+      --color-overlay: rgba(0,0,0,0.5);
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+      --shadow-xl: 0 20px 60px rgba(0,0,0,0.15);
+      --header-height: 64px;
+      --transition: 0.2s ease;
+    }
+
+    /* ========== DARK MODE VARS ========== */
+    [data-theme="dark"] {
+      --color-bg: #0f172a;
+      --color-surface: #1e293b;
+      --color-surface-alt: #334155;
+      --color-text: #f8fafc;
+      --color-text-secondary: #cbd5e1;
+      --color-text-muted: #64748b;
+      --color-border: #334155;
+      --color-border-light: #1e293b;
+      --color-primary-light: rgba(220, 38, 38, 0.15);
+      --color-overlay: rgba(0, 0, 0, 0.75);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-family);
+      background: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color var(--transition), color var(--transition);
+    }
+    img { display: block; max-width: 100%; }
+    button { cursor: pointer; font-family: inherit; border: none; background: none; }
+    input, textarea, select { font-family: inherit; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ========== HEADER ========== */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--color-primary);
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.5px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .header-logo svg { width: 34px; height: 34px; }
+    .search-wrapper {
+      flex: 1;
+      max-width: 680px;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      height: 40px;
+      border-radius: 20px;
+      border: none;
+      padding: 0 44px 0 16px;
+      font-size: 0.9rem;
+      background: var(--color-surface);
+      color: var(--color-text);
+      outline: none;
+      transition: box-shadow var(--transition);
+    }
+    .search-input::placeholder { color: var(--color-text-muted); }
+    .search-input:focus { box-shadow: 0 0 0 3px rgba(255,255,255,0.3); }
+    .search-btn {
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-secondary);
+    }
+    .search-btn:hover { background: var(--color-bg); }
+    .search-btn .material-symbols-outlined { font-size: 20px; }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .header-icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      transition: background var(--transition);
+    }
+    .header-icon-btn:hover { background: rgba(255,255,255,0.15); }
+    .header-icon-btn .material-symbols-outlined { font-size: 22px; }
+
+    /* ========== CATEGORIES BAR ========== */
+    .categories-bar {
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: 10px 16px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      white-space: nowrap;
+      box-shadow: var(--shadow-sm);
+    }
+    .category-chip {
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .category-chip:hover, .category-chip.active {
+      background: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+    }
+
+    /* ========== DROPDOWN MENU ========== */
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      min-width: 220px;
+      padding: 8px 0;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: all 0.2s ease;
+      z-index: 200;
+      border: 1px solid var(--color-border);
+    }
+    .dropdown-menu.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      color: var(--color-text);
+      transition: background var(--transition);
+      width: 100%;
+      text-align: left;
+    }
+    .dropdown-item:hover { background: var(--color-bg); }
+    .dropdown-item .material-symbols-outlined { font-size: 20px; color: var(--color-text-secondary); }
+    .dropdown-divider { height: 1px; background: var(--color-border); margin: 4px 0; }
+    .dropdown-item.danger { color: var(--color-danger); }
+    .dropdown-item.danger .material-symbols-outlined { color: var(--color-danger); }
+
+    /* ========== MAIN CONTAINER ========== */
+    .main-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px 16px 80px;
+    }
+
+    /* ========== PRODUCT GRID ========== */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    @media (min-width: 768px) {
+      .products-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; }
+    }
+
+    /* ========== PRODUCT CARD ========== */
+    .product-card {
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border-light);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    .product-card-img {
+      width: 100%;
+      aspect-ratio: 1/1;
+      object-fit: cover;
+      background: var(--color-bg);
+    }
+    .product-card-img-placeholder {
+      width: 100%;
+      aspect-ratio: 1/1;
+      background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-border) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .product-card-img-placeholder .material-symbols-outlined { font-size: 48px; color: var(--color-text-muted); }
+    .product-card-body {
+      padding: 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .product-card-price {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      letter-spacing: -0.5px;
+    }
+    .product-card-title {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* ========== EMPTY STATE ========== */
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      grid-column: 1 / -1;
+    }
+    .empty-state .material-symbols-outlined { font-size: 64px; color: var(--color-text-muted); margin-bottom: 16px; }
+    .empty-state h3 { font-size: 1.2rem; color: var(--color-text-secondary); margin-bottom: 8px; }
+    .empty-state p { font-size: 0.9rem; color: var(--color-text-muted); }
+
+    /* ========== PRODUCT DETAIL VIEW ========== */
+    .product-detail-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--color-overlay);
+      z-index: 500;
+      opacity: 0; visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .product-detail-overlay.show { opacity: 1; visibility: visible; }
+    .product-detail {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 100%;
+      max-width: 900px;
+      background: var(--color-surface);
+      z-index: 501;
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .product-detail.show { transform: translateX(0); }
+    .detail-header {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .detail-back-btn {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.9rem; color: var(--color-primary); font-weight: 600;
+      padding: 6px 8px; border-radius: var(--radius-sm);
+    }
+    .detail-back-btn:hover { background: var(--color-primary-light); }
+    .detail-admin-actions { display: flex; gap: 4px; }
+    .detail-admin-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .detail-admin-btn.edit { color: var(--color-primary); }
+    .detail-admin-btn.edit:hover { background: var(--color-primary-light); }
+    .detail-admin-btn.delete { color: var(--color-danger); }
+    .detail-admin-btn.delete:hover { background: #fef2f2; }
+
+    /* ========== CAROUSEL ========== */
+    .carousel-container { position: relative; background: var(--color-bg); overflow: hidden; }
+    .carousel-viewport { position: relative; width: 100%; aspect-ratio: 4/3; overflow: hidden; }
+    @media (min-width: 768px) { .carousel-viewport { aspect-ratio: 16/10; } }
+    .carousel-track { display: flex; height: 100%; transition: transform 0.4s ease; }
+    .carousel-slide { min-width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--color-bg); }
+    .carousel-slide img { width: 100%; height: 100%; object-fit: contain; }
+    .carousel-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.9); box-shadow: var(--shadow-md);
+      display: flex; align-items: center; justify-content: center; color: #1a1a2e; z-index: 5;
+    }
+    .carousel-btn.prev { left: 12px; }
+    .carousel-btn.next { right: 12px; }
+    .carousel-dots { display: flex; justify-content: center; gap: 8px; padding: 12px 0; }
+    .carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-text-muted); opacity: 0.4; }
+    .carousel-dot.active { opacity: 1; background: var(--color-primary); width: 24px; border-radius: 4px; }
+    .carousel-thumbnails { display: flex; gap: 8px; padding: 8px 16px; overflow-x: auto; }
+    .carousel-thumb { width: 56px; height: 56px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid transparent; flex-shrink: 0; }
+    .carousel-thumb.active { border-color: var(--color-primary); }
+    .carousel-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* ========== DETAIL BODY ========== */
+    .detail-body { padding: 20px 16px 100px; }
+    @media (min-width: 768px) { .detail-body { padding: 24px 32px 100px; } }
+    .detail-price { font-size: 2rem; font-weight: 700; color: var(--color-primary); letter-spacing: -1px; margin-bottom: 8px; }
+    .detail-title { font-size: 1.15rem; font-weight: 600; color: var(--color-text); line-height: 1.5; margin-bottom: 20px; }
+    .detail-section-label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); margin-bottom: 8px; }
+    .detail-description { font-size: 0.95rem; color: var(--color-text-secondary); line-height: 1.7; white-space: pre-wrap; }
+    .detail-divider { height: 1px; background: var(--color-border); margin: 20px 0; }
+
+    /* ========== WHATSAPP BUTTON ========== */
+    .whatsapp-btn-container {
+      position: fixed; bottom: 0; right: 0; width: 100%; max-width: 900px;
+      padding: 12px 16px; background: linear-gradient(to top, var(--color-surface) 80%, transparent);
+      z-index: 502; display: none;
+    }
+    .whatsapp-btn-container.show { display: block; }
+    .whatsapp-btn {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 14px 24px; border-radius: var(--radius-sm);
+      background: var(--color-whatsapp); color: white; font-size: 1rem; font-weight: 600;
+      box-shadow: var(--shadow-md);
+    }
+    .whatsapp-btn:hover { background: var(--color-whatsapp-dark); }
+    .whatsapp-btn svg { width: 22px; height: 22px; }
+
+    /* ========== MODALS ========== */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--color-overlay); z-index: 600;
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+      opacity: 0; visibility: hidden; transition: all 0.25s ease;
+    }
+    .modal-overlay.show { opacity: 1; visibility: visible; }
+    .modal-box {
+      background: var(--color-surface); border-radius: var(--radius-lg);
+      width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+      transform: translateY(20px); transition: transform 0.3s ease;
+      box-shadow: var(--shadow-xl);
+    }
+    .modal-overlay.show .modal-box { transform: translateY(0); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--color-border); }
+    .modal-header h2 { font-size: 1.1rem; font-weight: 600; }
+    .modal-close { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); }
+    .modal-close:hover { background: var(--color-bg); }
+    .modal-body { padding: 20px; }
+
+    /* ========== FORM STYLES ========== */
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 6px; }
+    .form-input, .form-select {
+      width: 100%; height: 44px; padding: 0 14px;
+      border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
+      font-size: 0.95rem; color: var(--color-text); background: var(--color-surface); outline: none;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
+    textarea.form-input { height: auto; min-height: 100px; padding: 12px 14px; resize: vertical; }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 24px; border-radius: var(--radius-sm);
+      background: var(--color-primary); color: white; font-size: 0.95rem; font-weight: 600; width: 100%;
+    }
+    .btn-primary:hover { background: var(--color-primary-dark); }
+    .btn-outline {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 24px; border-radius: var(--radius-sm); background: transparent;
+      color: var(--color-primary); font-size: 0.95rem; font-weight: 600; width: 100%;
+      border: 1.5px solid var(--color-primary);
+    }
+    .btn-outline:hover { background: var(--color-primary-light); }
+    .btn-danger { background: var(--color-danger); color: white; padding: 12px 24px; border-radius: var(--radius-sm); font-size: 0.95rem; font-weight: 600; width: 100%; }
+
+    /* ========== IMAGE UPLOAD ========== */
+    .image-upload-area {
+      border: 2px dashed var(--color-border); border-radius: var(--radius-md);
+      padding: 24px; text-align: center; cursor: pointer; background: var(--color-surface-alt);
+    }
+    .image-upload-area:hover { border-color: var(--color-primary); background: var(--color-primary-light); }
+    .image-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 12px; }
+    .image-preview-item { position: relative; aspect-ratio: 1/1; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--color-border); }
+    .image-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .image-preview-remove {
+      position: absolute; top: 4px; right: 4px; width: 22px; height: 22px;
+      border-radius: 50%; background: rgba(0,0,0,0.6); color: white;
+      display: flex; align-items: center; justify-content: center; font-size: 14px;
+    }
+
+    /* ========== FAB (Admin) ========== */
+    .fab-publish {
+      position: fixed; bottom: 24px; right: 24px;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--color-primary); color: white; box-shadow: var(--shadow-lg);
+      display: none; align-items: center; justify-content: center; z-index: 90;
+    }
+    .fab-publish:hover { background: var(--color-primary-dark); transform: scale(1.05); }
+    .fab-publish.show { display: flex; }
+    .fab-publish .material-symbols-outlined { font-size: 28px; }
+
+    /* ========== TOAST & SPINNER ========== */
+    .toast-container { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .toast { padding: 12px 20px; border-radius: var(--radius-sm); background: var(--color-text); color: var(--color-surface); font-size: 0.9rem; font-weight: 500; box-shadow: var(--shadow-lg); pointer-events: auto; }
+    .toast.error { background: var(--color-danger); color: white; }
+    .toast.success { background: var(--color-accent); color: white; }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--color-border); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-center { display: flex; align-items: center; justify-content: center; padding: 60px 0; grid-column: 1 / -1; }
+
+    /* ========== PASSWORD TOGGLE & TABS ========== */
+    .password-wrapper { position: relative; }
+    .password-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); }
+    .auth-tabs { display: flex; border-bottom: 2px solid var(--color-border); margin-bottom: 20px; }
+    .auth-tab { flex: 1; padding: 12px; text-align: center; font-weight: 600; font-size: 0.9rem; color: var(--color-text-muted); border-bottom: 2px solid transparent; margin-bottom: -2px; }
+    .auth-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+
+    /* ========== USER BADGE ========== */
+    .user-info-badge { display: flex; align-items: center; gap: 10px; padding: 10px 16px; }
+    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; }
+    .user-name { font-size: 0.85rem; font-weight: 600; }
+    .user-email-badge { font-size: 0.75rem; color: var(--color-text-muted); }
+
+    /* ========== UTILITIES ========== */
+    .hidden { display: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+    .search-results-badge { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; margin-bottom: 8px; }
+    .search-results-badge span { font-size: 0.9rem; color: var(--color-text-secondary); }
+    .search-clear-btn { font-size: 0.85rem; color: var(--color-primary); font-weight: 600; padding: 4px 8px; border-radius: var(--radius-sm); }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== HEADER ==================== -->
+  <header class="header">
+    <div class="header-logo" onclick="goHome()">
+      <!-- Logo Bolso de Supermercado Rojo -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+        <rect width="48" height="48" rx="12" fill="white" fill-opacity="0.2"/>
+        <!-- Asa del bolso -->
+        <path d="M16 18V13A8 8 0 0 1 32 13V18" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Cuerpo del bolso de supermercado -->
+        <path d="M10 18H38L35.5 38H12.5L10 18Z" fill="white" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+        <!-- Rejillas/Líneas del bolso de compras -->
+        <path d="M18 24V32" stroke="#DC2626" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M24 24V32" stroke="#DC2626" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M30 24V32" stroke="#DC2626" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <span>Mika's Market</span>
+    </div>
+
+    <div class="search-wrapper">
+      <input type="text" class="search-input" id="searchInput" placeholder="Buscar en Mika's Market..." autocomplete="off"/>
+      <button class="search-btn" onclick="performSearch()" aria-label="Buscar">
+        <span class="material-symbols-outlined">search</span>
+      </button>
+    </div>
+
+    <div class="header-actions">
+      <button class="header-icon-btn" onclick="toggleTheme()" aria-label="Cambiar tema">
+        <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+      </button>
+      <div style="position:relative">
+        <button class="header-icon-btn" id="menuBtn" onclick="toggleMenu()" aria-label="Menú">
+          <span class="material-symbols-outlined">more_vert</span>
+        </button>
+        <div class="dropdown-menu" id="dropdownMenu"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== CATEGORIES BAR ==================== -->
+  <div class="categories-bar" id="categoriesBar">
+    <button class="category-chip active" onclick="filterByCategory('all', this)">Todos</button>
+    <button class="category-chip" onclick="filterByCategory('Almacén', this)">Almacén</button>
+    <button class="category-chip" onclick="filterByCategory('Bebidas', this)">Bebidas</button>
+    <button class="category-chip" onclick="filterByCategory('Frescos', this)">Frescos</button>
+    <button class="category-chip" onclick="filterByCategory('Limpieza', this)">Limpieza</button>
+    <button class="category-chip" onclick="filterByCategory('Hogar', this)">Hogar</button>
+  </div>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="main-container">
+    <div class="search-results-badge hidden" id="searchBadge">
+      <span id="searchBadgeText"></span>
+      <button class="search-clear-btn" onclick="clearSearch()">Limpiar</button>
+    </div>
+
+    <div class="products-grid" id="productsGrid">
+      <div class="loading-center">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== FAB PUBLISH BUTTON ==================== -->
+  <button class="fab-publish" id="fabPublish" onclick="openPublishModal()">
+    <span class="material-symbols-outlined">add</span>
+  </button>
+
+  <!-- ==================== PRODUCT DETAIL PANEL ==================== -->
+  <div class="product-detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+  <div class="product-detail" id="detailPanel">
+    <div class="detail-header">
+      <button class="detail-back-btn" onclick="closeDetail()">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Volver
+      </button>
+      <div class="detail-admin-actions hidden" id="detailAdminActions">
+        <button class="detail-admin-btn edit" onclick="editCurrentProduct()" title="Editar">
+          <span class="material-symbols-outlined">edit</span>
+        </button>
+        <button class="detail-admin-btn delete" onclick="confirmDeleteProduct()" title="Eliminar">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="carousel-container" id="carouselContainer">
+      <div class="carousel-viewport">
+        <div class="carousel-track" id="carouselTrack"></div>
+        <button class="carousel-btn prev" onclick="carouselPrev()" id="carouselPrevBtn">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <button class="carousel-btn next" onclick="carouselNext()" id="carouselNextBtn">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+      <div class="carousel-dots" id="carouselDots"></div>
+      <div class="carousel-thumbnails" id="carouselThumbnails"></div>
+    </div>
+
+    <div class="detail-body">
+      <div class="detail-price" id="detailPrice"></div>
+      <h1 class="detail-title" id="detailTitle"></h1>
+      <div class="detail-divider"></div>
+      <div class="detail-section-label">Descripción del producto</div>
+      <div class="detail-description" id="detailDescription"></div>
+    </div>
+  </div>
+
+  <!-- WhatsApp Button -->
+  <div class="whatsapp-btn-container" id="whatsappBtnContainer">
+    <a class="whatsapp-btn" id="whatsappLink" href="#" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Pedir por WhatsApp
+    </a>
+  </div>
+
+  <!-- ==================== AUTH MODAL ==================== -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="authModalTitle">Iniciar Sesión</h2>
+        <button class="modal-close" onclick="closeModal('authModal')">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Iniciar Sesión</button>
+          <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Crear Cuenta</button>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label class="form-label" for="loginEmail">Correo electrónico</label>
+            <input type="email" class="form-input" id="loginEmail" placeholder="tu@correo.com" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="loginPassword">Contraseña</label>
+            <div class="password-wrapper">
+              <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" required minlength="6"/>
+              <button type="button" class="password-toggle" onclick="togglePassword('loginPassword', this)">
+                <span class="material-symbols-outlined">visibility_off</span>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" id="loginBtn">Iniciar Sesión</button>
+        </form>
+
+        <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label class="form-label" for="regName">Nombre completo</label>
+            <input type="text" class="form-input" id="regName" placeholder="Tu nombre" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regEmail">Correo electrónico</label>
+            <input type="email" class="form-input" id="regEmail" placeholder="tu@correo.com" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regPassword">Contraseña</label>
+            <div class="password-wrapper">
+              <input type="password" class="form-input" id="regPassword" placeholder="Mínimo 6 caracteres" required minlength="6"/>
+              <button type="button" class="password-toggle" onclick="togglePassword('regPassword', this)">
+                <span class="material-symbols-outlined">visibility_off</span>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" id="regBtn">Crear Cuenta</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PUBLISH / EDIT MODAL ==================== -->
+  <div class="modal-overlay" id="publishModal">
+    <div class="modal-box" style="max-width:560px;">
+      <div class="modal-header">
+        <h2 id="publishModalTitle">Nueva Publicación</h2>
+        <button class="modal-close" onclick="closeModal('publishModal')">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="publishForm" onsubmit="handlePublish(event)">
+          <div class="form-group">
+            <label class="form-label" for="pubTitle">Título del producto</label>
+            <input type="text" class="form-input" id="pubTitle" placeholder="Ej: Café Torrado en Grano 1kg" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pubCategory">Categoría</label>
+            <select class="form-select" id="pubCategory">
+              <option value="Almacén">Almacén</option>
+              <option value="Bebidas">Bebidas</option>
+              <option value="Frescos">Frescos</option>
+              <option value="Limpieza">Limpieza</option>
+              <option value="Hogar">Hogar</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pubPrice">Precio</label>
+            <input type="number" class="form-input" id="pubPrice" placeholder="0.00" step="0.01" min="0" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pubDescription">Descripción</label>
+            <textarea class="form-input" id="pubDescription" placeholder="Detalles, peso, marca, etc..." rows="4" required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pubPhone">Teléfono de WhatsApp</label>
+            <input type="tel" class="form-input" id="pubPhone" placeholder="Ej: 5491123456789" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pubWhatsappMsg">Mensaje predeterminado de WhatsApp</label>
+            <textarea class="form-input" id="pubWhatsappMsg" placeholder="Hola Mika's Market! Quiero pedir este producto..." rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fotos del producto</label>
+            <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('imageInput').click()">
+              <span class="material-symbols-outlined" style="font-size:36px; color:var(--color-text-muted);">add_photo_alternate</span>
+              <p style="font-size:0.85rem; color:var(--color-text-muted); margin-top:8px;">Toca para agregar fotos</p>
+            </div>
+            <input type="file" id="imageInput" class="sr-only" accept="image/*" multiple onchange="handleImageSelect(event)"/>
+            <div class="image-preview-grid" id="imagePreviewGrid"></div>
+          </div>
+          <button type="submit" class="btn-primary" id="publishBtn">
+            <span class="material-symbols-outlined" style="font-size:20px">publish</span>
+            Publicar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CONFIRM DELETE MODAL ==================== -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-box" style="max-width:380px">
+      <div class="modal-body" style="text-align:center;">
+        <span class="material-symbols-outlined" style="font-size:48px; color:var(--color-danger); margin-bottom:12px;">warning</span>
+        <p style="font-size:0.95rem; color:var(--color-text-secondary); margin-bottom:20px;">¿Eliminar esta publicación? Esta acción no se puede deshacer.</p>
+        <div style="display:flex; gap:12px;">
+          <button class="btn-outline" style="flex:1" onclick="closeModal('confirmModal')">Cancelar</button>
+          <button class="btn-danger" style="flex:1" id="confirmDeleteBtn" onclick="deleteProduct()">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+<!-- ==================== JAVASCRIPT ==================== -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-javascript@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://xjdzwytilhzwmgrrokmk.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqZHp3eXRpbGh6d21ncnJva21rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzOTA3MDksImV4cCI6MjEwNjk2NjcwOX0.wrWw7PAJdBf-xyf2KDjda-5pf931HfgFr1kkEkpNKE4';
+    const ADMIN_EMAIL = 'micaelavanesarosica@gmail.com';
+
+    let supabase;
+    try {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch(e) {
+      console.error('Error al inicializar Supabase:', e);
+      supabase = null;
+    }
+
+    let currentUser = null;
+    let isAdmin = false;
+    let products = [];
+    let filteredProducts = null;
+    let currentCategory = 'all';
+    let currentProduct = null;
+    let carouselIndex = 0;
+    let editingProductId = null;
+    let selectedImages = [];
+    let existingImages = [];
+
+    // DATOS DE EJEMPLO PARA MIKA'S MARKET
+    const DEMO_PRODUCTS = [
+      {
+        id: 'demo-1',
+        title: 'Café Blend Especial Mika\'s Market 500g',
+        category: 'Almacén',
+        price: 8500.00,
+        description: 'Café en grano o molido de tostado artesanal.\n\n☕ 100% Arábica\n☕ Origen seleccionado\n☕ Notas de chocolate y avellanas',
+        phone: '5491123456789',
+        whatsapp_message: 'Hola Mika\'s Market! Me interesa el Café Blend Especial 500g.',
+        images: ['https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600&q=80'],
+        created_at: new Date().toISOString()
+      },
+      {
+        id: 'demo-2',
+        title: 'Aceite de Oliva Extra Virgen Premium 500ml',
+        category: 'Almacén',
+        price: 12400.00,
+        description: 'Aceite de oliva de primera prensada en frío.\n\n🫒 Acidez menor a 0.2%\n🫒 Botella de vidrio oscuro anti-UV',
+        phone: '5491123456789',
+        whatsapp_message: 'Hola Mika\'s Market! Quiero encargar el Aceite de Oliva Extra Virgen.',
+        images: ['https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&q=80'],
+        created_at: new Date().toISOString()
+      },
+      {
+        id: 'demo-3',
+        title: 'Jugo Natural de Naranja Orgánico 1L',
+        category: 'Bebidas',
+        price: 3200.00,
+        description: 'Jugo exprimido 100% natural, sin conservantes ni azúcar agregada.\n\n🍊 Recién exprimido\n🍊 Alto contenido de Vitamina C',
+        phone: '5491123456789',
+        whatsapp_message: 'Hola! Quiero consultar por el Jugo Natural de Naranja.',
+        images: ['https://images.unsplash.com/photo-1613478223719-2ab802602423?w=600&q=80'],
+        created_at: new Date().toISOString()
+      }
+    ];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      updateThemeIcon(savedTheme);
+
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) setUser(session.user);
+        supabase.auth.onAuthStateChange((_, session) => {
+          if (session) setUser(session.user);
+          else clearUser();
+        });
+      }
+
+      updateMenuUI();
+      loadProducts();
+
+      document.getElementById('searchInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') performSearch();
+      });
+    });
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      updateThemeIcon(next);
+    }
+
+    function updateThemeIcon(theme) {
+      const icon = document.getElementById('themeIcon');
+      if (icon) icon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+    }
+
+    function filterByCategory(category, btnElement) {
+      currentCategory = category;
+      document.querySelectorAll('.category-chip').forEach(btn => btn.classList.remove('active'));
+      if (btnElement) btnElement.classList.add('active');
+      applyFilters();
+    }
+
+    function applyFilters() {
+      let result = [...products];
+      if (currentCategory !== 'all') {
+        result = result.filter(p => p.category === currentCategory);
+      }
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      if (query) {
+        result = result.filter(p =>
+          p.title.toLowerCase().includes(query) ||
+          (p.description && p.description.toLowerCase().includes(query))
+        );
+      }
+      filteredProducts = result;
+      renderProducts(filteredProducts);
+    }
+
+    function setUser(user) {
+      currentUser = user;
+      isAdmin = user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+      updateMenuUI();
+      updateAdminUI();
+    }
+
+    function clearUser() {
+      currentUser = null;
+      isAdmin = false;
+      updateMenuUI();
+      updateAdminUI();
+    }
+
+    function updateMenuUI() {
+      const menu = document.getElementById('dropdownMenu');
+      if (currentUser) {
+        const initial = (currentUser.user_metadata?.full_name || currentUser.email || 'U')[0].toUpperCase();
+        const name = currentUser.user_metadata?.full_name || 'Usuario';
+        menu.innerHTML = `
+          <div class="user-info-badge">
+            <div class="user-avatar">${initial}</div>
+            <div>
+              <div class="user-name">${escapeHtml(name)}</div>
+              <div class="user-email-badge">${escapeHtml(currentUser.email)}</div>
+            </div>
+          </div>
+          <div class="dropdown-divider"></div>
+          ${isAdmin ? `<button class="dropdown-item" onclick="openPublishModal(); toggleMenu();"><span class="material-symbols-outlined">add_circle</span>Nueva publicación</button><div class="dropdown-divider"></div>` : ''}
+          <button class="dropdown-item danger" onclick="handleLogout()"><span class="material-symbols-outlined">logout</span>Cerrar sesión</button>
+        `;
+      } else {
+        menu.innerHTML = `
+          <button class="dropdown-item" onclick="openAuthModal('login'); toggleMenu();"><span class="material-symbols-outlined">login</span>Iniciar sesión</button>
+          <button class="dropdown-item" onclick="openAuthModal('register'); toggleMenu();"><span class="material-symbols-outlined">person_add</span>Crear cuenta</button>
+        `;
+      }
+    }
+
+    function updateAdminUI() {
+      const fab = document.getElementById('fabPublish');
+      if (isAdmin) fab.classList.add('show');
+      else fab.classList.remove('show');
+    }
+
+    function toggleMenu() { document.getElementById('dropdownMenu').classList.toggle('show'); }
+
+    function openAuthModal(tab) {
+      openModal('authModal');
+      switchAuthTab(tab || 'login');
+    }
+
+    function switchAuthTab(tab) {
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      const tabLogin = document.getElementById('tabLogin');
+      const tabRegister = document.getElementById('tabRegister');
+      const title = document.getElementById('authModalTitle');
+
+      if (tab === 'login') {
+        loginForm.classList.remove('hidden'); registerForm.classList.add('hidden');
+        tabLogin.classList.add('active'); tabRegister.classList.remove('active');
+        title.textContent = 'Iniciar Sesión';
+      } else {
+        loginForm.classList.add('hidden'); registerForm.classList.remove('hidden');
+        tabLogin.classList.remove('active'); tabRegister.classList.add('active');
+        title.textContent = 'Crear Cuenta';
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      if (!supabase) { simulateLogin(email); return; }
+      try {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        showToast('Sesión iniciada correctamente', 'success');
+        closeModal('authModal');
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      if (!supabase) { simulateLogin(email, name); return; }
+      try {
+        const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name } } });
+        if (error) throw error;
+        showToast('Cuenta creada. Confirma tu correo.', 'success');
+        closeModal('authModal');
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function handleLogout() {
+      if (supabase) await supabase.auth.signOut();
+      clearUser(); closeModal('authModal'); closeDetail();
+      showToast('Sesión cerrada');
+    }
+
+    function simulateLogin(email, name) {
+      setUser({ id: 'demo-' + Date.now(), email, user_metadata: { full_name: name || email.split('@')[0] } });
+      showToast('Sesión iniciada (modo demo)', 'success');
+      closeModal('authModal');
+    }
+
+    async function loadProducts() {
+      const grid = document.getElementById('productsGrid');
+      if (!supabase) {
+        products = [...DEMO_PRODUCTS];
+        renderProducts(products);
+        return;
+      }
+      try {
+        const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        products = data || [];
+        renderProducts(products);
+      } catch (err) {
+        grid.innerHTML = `<div class="empty-state"><h3>Error al cargar productos</h3><p>${escapeHtml(err.message)}</p></div>`;
+      }
+    }
+
+    function renderProducts(items) {
+      const grid = document.getElementById('productsGrid');
+      if (!items || items.length === 0) {
+        grid.innerHTML = `<div class="empty-state"><span class="material-symbols-outlined">shopping_basket</span><h3>Sin productos en Mika's Market</h3><p>Pronto se añadirán nuevos artículos.</p></div>`;
+        return;
+      }
+      grid.innerHTML = items.map(p => `
+        <article class="product-card" onclick="openDetail('${p.id}')">
+          ${p.images && p.images[0] ? `<img class="product-card-img" src="${escapeHtml(p.images[0])}" alt="${escapeHtml(p.title)}"/>` : `<div class="product-card-img-placeholder"><span class="material-symbols-outlined">shopping_bag</span></div>`}
+          <div class="product-card-body">
+            <div class="product-card-price">${formatPrice(p.price)}</div>
+            <div class="product-card-title">${escapeHtml(p.title)}</div>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function performSearch() {
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      const badge = document.getElementById('searchBadge');
+      if (!query && currentCategory === 'all') { clearSearch(); return; }
+      applyFilters();
+      badge.classList.remove('hidden');
+      document.getElementById('searchBadgeText').textContent = `${filteredProducts.length} resultado(s) para "${query}"`;
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('searchBadge').classList.add('hidden');
+      applyFilters();
+    }
+
+    function goHome() {
+      clearSearch();
+      filterByCategory('all', document.querySelector('.category-chip'));
+      closeDetail();
+    }
+
+    function openDetail(productId) {
+      const p = products.find(prod => prod.id === productId);
+      if (!p) return;
+      currentProduct = p;
+      document.getElementById('detailPrice').textContent = formatPrice(p.price);
+      document.getElementById('detailTitle').textContent = p.title;
+      document.getElementById('detailDescription').textContent = p.description || 'Sin descripción';
+
+      const adminActions = document.getElementById('detailAdminActions');
+      if (isAdmin) adminActions.classList.remove('hidden');
+      else adminActions.classList.add('hidden');
+
+      buildCarousel(p.images || []);
+
+      const waContainer = document.getElementById('whatsappBtnContainer');
+      if (p.phone) {
+        const phone = p.phone.replace(/[^0-9]/g, '');
+        const msg = encodeURIComponent(p.whatsapp_message || `Hola Mika's Market! Me interesa: ${p.title}`);
+        document.getElementById('whatsappLink').href = `https://wa.me/${phone}?text=${msg}`;
+        waContainer.classList.add('show');
+      } else { waContainer.classList.remove('show'); }
+
+      document.getElementById('detailOverlay').classList.add('show');
+      document.getElementById('detailPanel').classList.add('show');
+    }
+
+    function closeDetail() {
+      document.getElementById('detailOverlay').classList.remove('show');
+      document.getElementById('detailPanel').classList.remove('show');
+      document.getElementById('whatsappBtnContainer').classList.remove('show');
+      currentProduct = null;
+    }
+
+    function buildCarousel(images) {
+      const track = document.getElementById('carouselTrack');
+      const dots = document.getElementById('carouselDots');
+      const thumbs = document.getElementById('carouselThumbnails');
+      if (!images || images.length === 0) {
+        track.innerHTML = `<div class="carousel-slide"><div class="product-card-img-placeholder"><span class="material-symbols-outlined">shopping_bag</span></div></div>`;
+        dots.innerHTML = ''; thumbs.innerHTML = ''; return;
+      }
+      track.innerHTML = images.map(src => `<div class="carousel-slide"><img src="${escapeHtml(src)}"/></div>`).join('');
+      dots.innerHTML = images.map((_, i) => `<button class="carousel-dot ${i===0?'active':''}" onclick="goToSlide(${i})"></button>`).join('');
+      thumbs.innerHTML = images.map((src, i) => `<button class="carousel-thumb ${i===0?'active':''}" onclick="goToSlide(${i})"><img src="${escapeHtml(src)}"/></button>`).join('');
+      carouselIndex = 0;
+      updateCarousel();
+    }
+
+    function goToSlide(i) { carouselIndex = i; updateCarousel(); }
+    function carouselPrev() { if (currentProduct?.images) { carouselIndex = (carouselIndex - 1 + currentProduct.images.length) % currentProduct.images.length; updateCarousel(); } }
+    function carouselNext() { if (currentProduct?.images) { carouselIndex = (carouselIndex + 1) % currentProduct.images.length; updateCarousel(); } }
+    function updateCarousel() {
+      document.getElementById('carouselTrack').style.transform = `translateX(-${carouselIndex * 100}%)`;
+      document.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === carouselIndex));
+      document.querySelectorAll('.carousel-thumb').forEach((t, i) => t.classList.toggle('active', i === carouselIndex));
+    }
+
+    function openPublishModal(product) {
+      if (!isAdmin) return;
+      selectedImages = []; existingImages = [];
+      document.getElementById('imagePreviewGrid').innerHTML = '';
+      if (product) {
+        editingProductId = product.id;
+        document.getElementById('publishModalTitle').textContent = 'Editar Publicación';
+        document.getElementById('pubTitle').value = product.title;
+        document.getElementById('pubCategory').value = product.category || 'Almacén';
+        document.getElementById('pubPrice').value = product.price;
+        document.getElementById('pubDescription').value = product.description;
+        document.getElementById('pubPhone').value = product.phone;
+        document.getElementById('pubWhatsappMsg').value = product.whatsapp_message;
+        if (product.images) { existingImages = [...product.images]; renderExistingImagePreviews(); }
+      } else {
+        editingProductId = null;
+        document.getElementById('publishModalTitle').textContent = 'Nueva Publicación';
+        document.getElementById('publishForm').reset();
+        document.getElementById('pubWhatsappMsg').value = "Hola Mika's Market! Quisiera consultar sobre este producto.";
+      }
+      openModal('publishModal');
+    }
+
+    function renderExistingImagePreviews() {
+      document.getElementById('imagePreviewGrid').innerHTML = existingImages.map((url, i) => `
+        <div class="image-preview-item">
+          <img src="${escapeHtml(url)}"/>
+          <button type="button" class="image-preview-remove" onclick="existingImages.splice(${i},1); renderExistingImagePreviews();">×</button>
+        </div>`).join('');
+    }
+
+    function handleImageSelect(e) {
+      selectedImages.push(...Array.from(e.target.files));
+      renderNewImagePreviews();
+    }
+
+    function renderNewImagePreviews() {
+      document.querySelectorAll('.image-preview-item[data-new]').forEach(el => el.remove());
+      selectedImages.forEach((file, i) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const div = document.createElement('div');
+          div.className = 'image-preview-item';
+          div.dataset.new = i;
+          div.innerHTML = `<img src="${e.target.result}"/><button type="button" class="image-preview-remove" onclick="selectedImages.splice(${i},1); renderNewImagePreviews();">×</button>`;
+          document.getElementById('imagePreviewGrid').appendChild(div);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handlePublish(e) {
+      e.preventDefault();
+      if (!isAdmin) return;
+      const title = document.getElementById('pubTitle').value.trim();
+      const category = document.getElementById('pubCategory').value;
+      const price = parseFloat(document.getElementById('pubPrice').value);
+      const description = document.getElementById('pubDescription').value.trim();
+      const phone = document.getElementById('pubPhone').value.trim();
+      const whatsapp_message = document.getElementById('pubWhatsappMsg').value.trim();
+
+      let imageUrls = [...existingImages];
+
+      if (!supabase) {
+        selectedImages.forEach(file => imageUrls.push(URL.createObjectURL(file)));
+        if (editingProductId) {
+          const idx = products.findIndex(p => p.id === editingProductId);
+          if (idx !== -1) products[idx] = { ...products[idx], title, category, price, description, phone, whatsapp_message, images: imageUrls };
+        } else {
+          products.unshift({ id: 'demo-' + Date.now(), title, category, price, description, phone, whatsapp_message, images: imageUrls, created_at: new Date().toISOString() });
+        }
+        showToast('Guardado en Mika\'s Market', 'success');
+        closeModal('publishModal');
+        applyFilters();
+        return;
+      }
+
+      try {
+        for (const file of selectedImages) {
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+          const { error: uploadError } = await supabase.storage.from('product-images').upload(`products/${fileName}`, file);
+          if (uploadError) throw uploadError;
+          const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(`products/${fileName}`);
+          imageUrls.push(publicUrl);
+        }
+
+        if (editingProductId) {
+          await supabase.from('products').update({ title, category, price, description, phone, whatsapp_message, images: imageUrls }).eq('id', editingProductId);
+        } else {
+          await supabase.from('products').insert([{ title, category, price, description, phone, whatsapp_message, images: imageUrls, user_id: currentUser.id }]);
+        }
+        showToast('Publicación guardada exitosamente', 'success');
+        closeModal('publishModal');
+        await loadProducts();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    function editCurrentProduct() { if (currentProduct) openPublishModal(currentProduct); }
+    function confirmDeleteProduct() { openModal('confirmModal'); }
+
+    async function deleteProduct() {
+      if (!currentProduct) return;
+      if (!supabase) {
+        products = products.filter(p => p.id !== currentProduct.id);
+        showToast('Eliminado de Mika\'s Market', 'success');
+        closeModal('confirmModal'); closeDetail(); applyFilters();
+        return;
+      }
+      try {
+        await supabase.from('products').delete().eq('id', currentProduct.id);
+        showToast('Publicación eliminada', 'success');
+        closeModal('confirmModal'); closeDetail(); await loadProducts();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    function formatPrice(p) { return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(p || 0); }
+    function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+    function togglePassword(id, btn) {
+      const inp = document.getElementById(id);
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      btn.querySelector('.material-symbols-outlined').textContent = inp.type === 'password' ? 'visibility_off' : 'visibility';
+    }
+    function openModal(id) { document.getElementById(id).classList.add('show'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+    function showToast(msg, type = '') {
+      const container = document.getElementById('toastContainer');
+      const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
+      container.appendChild(t); setTimeout(() => t.remove(), 3000);
+    }
+  </script>
+</body>
+</html>
