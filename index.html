@@ -546,10 +546,10 @@
   <!-- ==================== CATEGORIES BAR ==================== -->
   <div class="categories-bar" id="categoriesBar">
     <button class="category-chip active" onclick="filterByCategory('all', this)">Todos</button>
-    <button class="category-chip" onclick="filterByCategory('Almacén', this)">Almacén</button>
-    <button class="category-chip" onclick="filterByCategory('Bebidas', this)">Bebidas</button>
-    <button class="category-chip" onclick="filterByCategory('Frescos', this)">Frescos</button>
-    <button class="category-chip" onclick="filterByCategory('Limpieza', this)">Limpieza</button>
+    <button class="category-chip" onclick="filterByCategory('Ropa', this)">Ropa</button>
+    <button class="category-chip" onclick="filterByCategory('Electrodomesticos', this)">Electrodomesticos</button>
+    <button class="category-chip" onclick="filterByCategory('Muebles', this)">Muebles</button>
+    <button class="category-chip" onclick="filterByCategory('Utiles', this)">Utiles</button>
     <button class="category-chip" onclick="filterByCategory('Hogar', this)">Hogar</button>
   </div>
 
@@ -695,10 +695,10 @@
           <div class="form-group">
             <label class="form-label" for="pubCategory">Categoría</label>
             <select class="form-select" id="pubCategory">
-              <option value="Almacén">Almacén</option>
-              <option value="Bebidas">Bebidas</option>
-              <option value="Frescos">Frescos</option>
-              <option value="Limpieza">Limpieza</option>
+              <option value="Ropa">Ropa</option>
+              <option value="Electrodomesticos">Electrodomesticos</option>
+              <option value="Muebles">Muebles</option>
+              <option value="Utiles">Utiles</option>
               <option value="Hogar">Hogar</option>
             </select>
           </div>
@@ -782,7 +782,7 @@
       {
         id: 'demo-1',
         title: 'Café Blend Especial Mika\'s Market 500g',
-        category: 'Almacén',
+        category: 'Ropa',
         price: 8500.00,
         description: 'Café en grano o molido de tostado artesanal.\n\n☕ 100% Arábica\n☕ Origen seleccionado\n☕ Notas de chocolate y avellanas',
         phone: '5491123456789',
@@ -793,7 +793,7 @@
       {
         id: 'demo-2',
         title: 'Aceite de Oliva Extra Virgen Premium 500ml',
-        category: 'Almacén',
+        category: 'Ropa',
         price: 12400.00,
         description: 'Aceite de oliva de primera prensada en frío.\n\n🫒 Acidez menor a 0.2%\n🫒 Botella de vidrio oscuro anti-UV',
         phone: '5491123456789',
@@ -1101,7 +1101,7 @@
         editingProductId = product.id;
         document.getElementById('publishModalTitle').textContent = 'Editar Publicación';
         document.getElementById('pubTitle').value = product.title;
-        document.getElementById('pubCategory').value = product.category || 'Almacén';
+        document.getElementById('pubCategory').value = product.category || 'Ropa';
         document.getElementById('pubPrice').value = product.price;
         document.getElementById('pubDescription').value = product.description;
         document.getElementById('pubPhone').value = product.phone;
